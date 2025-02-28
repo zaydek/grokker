@@ -9,12 +9,12 @@
 //
 // Flags:
 //
-//	--dir stringSlice        Directories to search (comma-separated, default ["."])
-//	--dir-depth int          Maximum directory depth to search (default -1, meaning infinite)
-//	--ext stringSlice        File extensions to include (comma-separated, default [])
-//	--substring stringSlice  Substrings to filter files by (comma-separated, default [])
-//	--action stringSlice     Actions to perform: print, copy (comma-separated, default print,copy)
-//	--format stringSlice     Output formats: tree, list, contents (comma-separated, default tree,contents)
+//	--dir strings        Directories to search (comma-separated, default ["."])
+//	--dir-depth int      Maximum directory depth to search (default -1, meaning infinite)
+//	--ext strings        File extensions to include (comma-separated, default [])
+//	--substring strings  Substrings to filter files by (comma-separated, default [])
+//	--action strings     Actions to perform: print, copy (comma-separated, default print,copy)
+//	--format strings     Output formats: tree, list, contents (comma-separated, default tree,contents)
 //
 // If no directories are provided, it searches the current directory.
 // If no extensions are provided, all files are processed.
@@ -173,22 +173,23 @@ func expandTilde(path string) (string, error) {
 	return path, nil
 }
 
-// anyCleanExtMatches returns true if any of the clean extensions match the filename.
-// A clean extension is the extension without the leading dot.
-// If cleanExts is empty, it matches all extensions.
-//
-// Note: The comparison is case-insensitive.
-func anyCleanExtMatches(filename string, cleanExts []string) bool {
-	if len(cleanExts) == 0 {
+// areExtMatches returns true if the filename has any of the specified extensions.
+// If exts is empty, it matches all extensions.
+// The comparison is case-insensitive and requires an exact match.
+func areExtMatches(filename string, exts []string) bool {
+	if len(exts) == 0 {
 		return true
 	}
 	filenameExt := filepath.Ext(filename)
 	if filenameExt == "" {
 		return false
 	}
-	filenameCleanExt := strings.TrimPrefix(filenameExt, ".")
-	for _, cleanExt := range cleanExts {
-		if strings.EqualFold(filenameCleanExt, cleanExt) {
+	// Remove the leading dot from filenameExt
+	filenameExt = strings.TrimPrefix(filenameExt, ".")
+	for _, ext := range exts {
+		// Remove the leading dot from ext, if present
+		ext = strings.TrimPrefix(ext, ".")
+		if strings.EqualFold(filenameExt, ext) {
 			return true
 		}
 	}
@@ -197,14 +198,13 @@ func anyCleanExtMatches(filename string, cleanExts []string) bool {
 
 // anySubstringMatches returns true if any of the substrings match the path or content.
 // If substrings is empty, it matches all paths and contents.
-//
-// Note: The comparison is case-insensitive.
+// The comparison is case-insensitive.
 func anySubstringMatches(substrings []string, path, content string) bool {
 	if len(substrings) == 0 {
 		return true
 	}
 	for _, sub := range substrings {
-		if strings.EqualFold(path, sub) || strings.Contains(content, sub) {
+		if strings.Contains(strings.ToLower(path), strings.ToLower(sub)) || strings.Contains(content, sub) {
 			return true
 		}
 	}
@@ -212,7 +212,6 @@ func anySubstringMatches(substrings []string, path, content string) bool {
 }
 
 // copyToClipboard copies a string to the clipboard using the pbcopy command.
-//
 // Note: This function is only supported on macOS.
 func copyToClipboard(str []byte) error {
 	cmd := exec.Command("pbcopy")
@@ -289,7 +288,7 @@ and performs specified actions on the output generated in the specified formats.
 			parsedFormats = append(parsedFormats, format)
 		}
 
-		// Collect files and directories with depth control
+		// Collect files with depth control and extension filter
 		type Entry struct {
 			Path  string
 			IsDir bool
@@ -312,17 +311,8 @@ and performs specified actions on the output generated in the specified formats.
 				} else {
 					depth = strings.Count(relPath, string(os.PathSeparator)) + 1
 				}
-				if info.IsDir() {
-					if dirDepth == -1 || depth <= dirDepth {
-						entriesByRoot[dir] = append(entriesByRoot[dir], Entry{Path: path, IsDir: true, Depth: depth})
-					}
-					if dirDepth != -1 && depth >= dirDepth {
-						return filepath.SkipDir // Prevent traversal beyond dirDepth
-					}
-				} else {
-					if (dirDepth == -1 || depth <= dirDepth) && anyCleanExtMatches(info.Name(), exts) {
-						entriesByRoot[dir] = append(entriesByRoot[dir], Entry{Path: path, IsDir: false, Depth: depth})
-					}
+				if !info.IsDir() && (dirDepth == -1 || depth <= dirDepth) && areExtMatches(info.Name(), exts) {
+					entriesByRoot[dir] = append(entriesByRoot[dir], Entry{Path: path, IsDir: false, Depth: depth})
 				}
 				return nil
 			})
@@ -331,20 +321,16 @@ and performs specified actions on the output generated in the specified formats.
 			}
 		}
 
-		// Ensure there are files or directories to process
+		// Ensure there are files to process
 		if len(entriesByRoot) == 0 {
-			fmt.Println("No files or directories found.")
+			fmt.Println("No files found.")
 			return nil
 		}
 
 		// Confirm before processing a large number of files (50+)
 		totalFiles := 0
 		for _, entries := range entriesByRoot {
-			for _, entry := range entries {
-				if !entry.IsDir {
-					totalFiles++
-				}
-			}
+			totalFiles += len(entries)
 		}
 		if totalFiles > 50 {
 			reader := bufio.NewReader(os.Stdin)
@@ -356,7 +342,7 @@ and performs specified actions on the output generated in the specified formats.
 			}
 		}
 
-		// Process the files and directories
+		// Process the files
 		var outputs []string
 		for _, format := range parsedFormats {
 			var output string
@@ -365,17 +351,15 @@ and performs specified actions on the output generated in the specified formats.
 				var b strings.Builder
 				for _, entries := range entriesByRoot {
 					for _, entry := range entries {
-						if !entry.IsDir {
-							content, err := os.ReadFile(entry.Path)
-							if err != nil {
-								slog.Error("failed to read file", slog.String("path", entry.Path), slog.String("error", err.Error()))
-								continue
-							}
-							contentStr := string(content)
-							if len(substrings) == 0 || anySubstringMatches(substrings, entry.Path, contentStr) {
-								b.WriteString("# " + entry.Path + "\n")
-								b.WriteString(contentStr + "\n\n")
-							}
+						content, err := os.ReadFile(entry.Path)
+						if err != nil {
+							slog.Error("failed to read file", slog.String("path", entry.Path), slog.String("error", err.Error()))
+							continue
+						}
+						contentStr := string(content)
+						if len(substrings) == 0 || anySubstringMatches(substrings, entry.Path, contentStr) {
+							b.WriteString("# " + entry.Path + "\n")
+							b.WriteString(contentStr + "\n\n")
 						}
 					}
 				}
@@ -385,7 +369,7 @@ and performs specified actions on the output generated in the specified formats.
 				var filteredFiles []string
 				for _, entries := range entriesByRoot {
 					for _, entry := range entries {
-						if !entry.IsDir && (len(substrings) == 0 || anySubstringMatches(substrings, entry.Path, "")) {
+						if len(substrings) == 0 || anySubstringMatches(substrings, entry.Path, "") {
 							filteredFiles = append(filteredFiles, entry.Path)
 						}
 					}
@@ -403,9 +387,6 @@ and performs specified actions on the output generated in the specified formats.
 							relPath, err := filepath.Rel(root, entry.Path)
 							if err != nil {
 								return fmt.Errorf("failed to get relative path: %w", err)
-							}
-							if relPath == "." {
-								continue // Skip the root itself
 							}
 							parts := strings.Split(relPath, string(os.PathSeparator))
 							Insert(rootNode, parts, entry.IsDir)
@@ -473,7 +454,7 @@ func PreRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("directory depth is invalid: %d", dirDepth)
 	}
 
-	// Validate the flag --ext
+	// Validate the flag --action
 	var invalidActions []string
 	for _, action := range actions {
 		if _, err := parseAction(action); err != nil {
