@@ -11,7 +11,7 @@
 //
 //	--dir strings        Directories to search (comma-separated, default ["."])
 //	--dir-depth int      Maximum directory depth to search (default -1, meaning infinite)
-//	--ext strings        File extensions to include (comma-separated, default [])
+//	--ext strings        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx
 //	--substring strings  Substrings to filter files by (comma-separated, default [])
 //	--action strings     Actions to perform: print, copy (comma-separated, default print,copy)
 //	--format strings     Output formats: tree, list, contents (comma-separated, default tree,contents)
@@ -176,6 +176,7 @@ func expandTilde(path string) (string, error) {
 // areExtMatches returns true if the filename has any of the specified extensions.
 // If exts is empty, it matches all extensions.
 // The comparison is case-insensitive and requires an exact match.
+// Extensions are expected to include the leading dot (e.g., ".ts").
 func areExtMatches(filename string, exts []string) bool {
 	if len(exts) == 0 {
 		return true
@@ -184,11 +185,7 @@ func areExtMatches(filename string, exts []string) bool {
 	if filenameExt == "" {
 		return false
 	}
-	// Remove the leading dot from filenameExt
-	filenameExt = strings.TrimPrefix(filenameExt, ".")
 	for _, ext := range exts {
-		// Remove the leading dot from ext, if present
-		ext = strings.TrimPrefix(ext, ".")
 		if strings.EqualFold(filenameExt, ext) {
 			return true
 		}
@@ -247,7 +244,7 @@ func help() (string, error) {
 	b.WriteString(styleBoldBrightWhite.Render(`Flags:`) + "\n")
 	b.WriteString(`  ` + styleCyan.Render(`--dir`) + `        Directories to search (comma-separated, default [.])` + "\n")
 	b.WriteString(`  ` + styleCyan.Render(`--dir-depth`) + `  Maximum directory depth to search (default -1, meaning infinite)` + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--ext`) + `        File extensions to include (comma-separated, default [])` + "\n")
+	b.WriteString(`  ` + styleCyan.Render(`--ext`) + `        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx` + "\n")
 	b.WriteString(`  ` + styleCyan.Render(`--substring`) + `  Substrings to filter by (comma-separated, default [])` + "\n")
 	b.WriteString(`  ` + styleCyan.Render(`--action`) + `     Actions to perform: print, copy (comma-separated, default print,copy)` + "\n")
 	b.WriteString(`  ` + styleCyan.Render(`--format`) + `     Output formats: tree, list, contents (comma-separated, default tree,contents)` + "\n\n")
@@ -454,6 +451,13 @@ func PreRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("directory depth is invalid: %d", dirDepth)
 	}
 
+	// Validate the flag --ext (ensure all extensions start with a dot)
+	for _, ext := range exts {
+		if !strings.HasPrefix(ext, ".") {
+			return fmt.Errorf("extensions must start with a dot (e.g., .ts): %s", ext)
+		}
+	}
+
 	// Validate the flag --action
 	var invalidActions []string
 	for _, action := range actions {
@@ -483,7 +487,7 @@ func main() {
 
 	rootCmd.Flags().StringSliceVar(&dirs, "dir", []string{"."}, "Directories to search (comma-separated, default [.])")
 	rootCmd.Flags().IntVar(&dirDepth, "dir-depth", -1, "Maximum directory depth to search (default -1, meaning infinite)")
-	rootCmd.Flags().StringSliceVar(&exts, "ext", []string{}, "File extensions to include (comma-separated, default [])")
+	rootCmd.Flags().StringSliceVar(&exts, "ext", []string{}, "File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx")
 	rootCmd.Flags().StringSliceVar(&substrings, "substring", []string{}, "Substrings to filter files by (comma-separated, default [])")
 	rootCmd.Flags().StringSliceVar(&actions, "action", []string{"print", "copy"}, "Actions to perform: print, copy (comma-separated, default print,copy)")
 	rootCmd.Flags().StringSliceVar(&formats, "format", []string{"tree", "contents"}, "Output formats: tree, list, contents (comma-separated, default tree,contents)")
