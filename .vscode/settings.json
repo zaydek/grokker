@@ -1,0 +1,4 @@
+{
+  // https://code.visualstudio.com/docs/copilot/copilot-customization
+  "github.copilot.chat.commitMessageGeneration.instructions": [{ "file": ".vscode/git-commit.md" }],
+}
