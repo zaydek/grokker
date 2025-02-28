@@ -172,21 +172,30 @@ func expandTilde(path string) (string, error) {
 	return path, nil
 }
 
-// hasValidExtension returns true if the filename has a valid extension.
-func hasValidExtension(filename string, exts []string) bool {
-	if len(exts) == 0 {
+// anyCleanExtMatches returns true if any of the clean extensions match the filename.
+// A clean extension is the extension without the leading dot.
+// If cleanExts is empty, it matches all extensions.
+// The comparison is case-insensitive.
+func anyCleanExtMatches(filename string, cleanExts []string) bool {
+	if len(cleanExts) == 0 {
 		return true
 	}
 	filenameExt := filepath.Ext(filename)
-	for _, ext := range exts {
-		if strings.EqualFold(filenameExt, ext) {
+	if filenameExt == "" {
+		return false
+	}
+	filenameCleanExt := strings.TrimPrefix(filenameExt, ".")
+	for _, cleanExt := range cleanExts {
+		if strings.EqualFold(filenameCleanExt, cleanExt) {
 			return true
 		}
 	}
 	return false
 }
 
-// anySubstringMatches returns true if any of the substrings are found in the path or content.
+// anySubstringMatches returns true if any of the substrings match the path or content.
+// If substrings is empty, it matches all paths and contents.
+// The comparison is case-insensitive.
 func anySubstringMatches(substrings []string, path, content string) bool {
 	if len(substrings) == 0 {
 		return true
@@ -254,18 +263,21 @@ var rootCmd = &cobra.Command{
 It formats file paths and contents, optionally filters by substrings and extensions,
 and performs specified actions on the output generated in the specified formats.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Print the help message if no arguments are provided
 		if len(os.Args) == 1 {
 			help, _ := help()
 			fmt.Println(help)
 			os.Exit(0)
 		}
 
+		// Parse the actions
 		var parsedActions []Action
 		for _, actionStr := range actions {
 			action, _ := parseAction(actionStr)
 			parsedActions = append(parsedActions, action)
 		}
 
+		// Parse the formats
 		var parsedFormats []Format
 		for _, formatStr := range formats {
 			format, _ := parseFormat(formatStr)
@@ -303,7 +315,7 @@ and performs specified actions on the output generated in the specified formats.
 						return filepath.SkipDir // Prevent traversal beyond dirDepth
 					}
 				} else {
-					if (dirDepth == -1 || depth <= dirDepth) && hasValidExtension(info.Name(), exts) {
+					if (dirDepth == -1 || depth <= dirDepth) && anyCleanExtMatches(info.Name(), exts) {
 						entriesByRoot[dir] = append(entriesByRoot[dir], Entry{Path: path, IsDir: false, Depth: depth})
 					}
 				}
