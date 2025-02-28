@@ -161,6 +161,7 @@ func parseFormat(formatString string) (Format, error) {
 }
 
 // expandTilde replaces ~ with the user's home directory in the given path.
+// If the path does not start with ~, it is returned as is.
 func expandTilde(path string) (string, error) {
 	if strings.HasPrefix(path, "~") {
 		home, err := os.UserHomeDir()
@@ -175,7 +176,8 @@ func expandTilde(path string) (string, error) {
 // anyCleanExtMatches returns true if any of the clean extensions match the filename.
 // A clean extension is the extension without the leading dot.
 // If cleanExts is empty, it matches all extensions.
-// The comparison is case-insensitive.
+//
+// Note: The comparison is case-insensitive.
 func anyCleanExtMatches(filename string, cleanExts []string) bool {
 	if len(cleanExts) == 0 {
 		return true
@@ -195,7 +197,8 @@ func anyCleanExtMatches(filename string, cleanExts []string) bool {
 
 // anySubstringMatches returns true if any of the substrings match the path or content.
 // If substrings is empty, it matches all paths and contents.
-// The comparison is case-insensitive.
+//
+// Note: The comparison is case-insensitive.
 func anySubstringMatches(substrings []string, path, content string) bool {
 	if len(substrings) == 0 {
 		return true
@@ -209,6 +212,8 @@ func anySubstringMatches(substrings []string, path, content string) bool {
 }
 
 // copyToClipboard copies a string to the clipboard using the pbcopy command.
+//
+// Note: This function is only supported on macOS.
 func copyToClipboard(str []byte) error {
 	cmd := exec.Command("pbcopy")
 	cmd.Stdin = bytes.NewReader(str)
