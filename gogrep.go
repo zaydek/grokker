@@ -483,22 +483,23 @@ func PreRunE(cmd *cobra.Command, args []string) error {
 }
 
 func main() {
+	// Configure the logger
 	logutils.Configure(logutils.Configuration{IsJSONEnabled: false})
 
+	// Define the root command
 	rootCmd.Flags().StringSliceVar(&dirs, "dir", []string{"."}, "Directories to search (comma-separated, default [.])")
 	rootCmd.Flags().IntVar(&dirDepth, "dir-depth", -1, "Maximum directory depth to search (default -1, meaning infinite)")
 	rootCmd.Flags().StringSliceVar(&exts, "ext", []string{}, "File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx")
 	rootCmd.Flags().StringSliceVar(&substrings, "substring", []string{}, "Substrings to filter files by (comma-separated, default [])")
 	rootCmd.Flags().StringSliceVar(&actions, "action", []string{"print", "copy"}, "Actions to perform: print, copy (comma-separated, default print,copy)")
 	rootCmd.Flags().StringSliceVar(&formats, "format", []string{"tree", "contents"}, "Output formats: tree, list, contents (comma-separated, default tree,contents)")
-
 	rootCmd.PreRunE = PreRunE
-
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		help, _ := help()
 		fmt.Println(help)
 	})
 
+	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
