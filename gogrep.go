@@ -189,15 +189,15 @@ and performs specified actions on the output generated in the specified formats.
 		// Parse the actions
 		var parsedActions []Action
 		for _, actionStr := range actions {
-			act, _ := parseAction(actionStr) // No error check needed, validated in PreRunE
-			parsedActions = append(parsedActions, act)
+			action, _ := parseAction(actionStr) // No error check needed, validated in PreRunE
+			parsedActions = append(parsedActions, action)
 		}
 
 		// Parse the formats
 		var parsedFormats []Format
 		for _, formatStr := range formats {
-			fmt, _ := parseFormat(formatStr) // No error check needed, validated in PreRunE
-			parsedFormats = append(parsedFormats, fmt)
+			format, _ := parseFormat(formatStr) // No error check needed, validated in PreRunE
+			parsedFormats = append(parsedFormats, format)
 		}
 
 		// Collect files grouped by root directory
@@ -224,7 +224,7 @@ and performs specified actions on the output generated in the specified formats.
 					}
 				}
 				// Process files if they match extensions
-				if !info.IsDir() && isValidExt(info.Name(), exts) {
+				if !info.IsDir() && hasValidExtension(info.Name(), exts) {
 					filesByRoot[dir] = append(filesByRoot[dir], path)
 				}
 				return nil
@@ -232,6 +232,12 @@ and performs specified actions on the output generated in the specified formats.
 			if err != nil {
 				return fmt.Errorf("failed to walk directory: %w", err)
 			}
+		}
+
+		// Check if any files were found
+		if len(filesByRoot) == 0 {
+			fmt.Println("No files found.")
+			return nil
 		}
 
 		// Confirm before processing a large number of files (50+)
@@ -243,8 +249,8 @@ and performs specified actions on the output generated in the specified formats.
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Println(styleBoldRed.Render(fmt.Sprintf("WARNING: Processing %s files. Proceed? [y/N] ", humanize.Comma(int64(totalFiles)))))
 			response, _ := reader.ReadString('\n')
-			if strings.ToLower(strings.TrimSpace(response)) != "y" {
-				fmt.Println("Operation cancelled.")
+			if !strings.EqualFold(strings.TrimSpace(response), "y") {
+				fmt.Println("Aborted.")
 				return nil
 			}
 		}
@@ -318,8 +324,8 @@ and performs specified actions on the output generated in the specified formats.
 		combinedOutput := strings.Join(outputs, "\n\n")
 
 		// Perform the specified actions on the output
-		for _, act := range parsedActions {
-			switch act {
+		for _, action := range parsedActions {
+			switch action {
 			case ActionPrint:
 				fmt.Println(combinedOutput)
 			case ActionCopy:
@@ -332,15 +338,15 @@ and performs specified actions on the output generated in the specified formats.
 	},
 }
 
-// isValidExt returns true if the filename has one of the specified extensions.
+// hasValidExtension returns true if the filename has a valid extension.
 // If no extensions are provided, it always returns true.
-func isValidExt(filename string, exts []string) bool {
+func hasValidExtension(filename string, exts []string) bool {
 	if len(exts) == 0 {
 		return true
 	}
+	filenameExt := filepath.Ext(filename)
 	for _, ext := range exts {
-		// Lowercase all strings for case-insensitive comparison
-		if strings.HasSuffix(strings.ToLower(filename), strings.ToLower(ext)) {
+		if strings.EqualFold(filenameExt, ext) {
 			return true
 		}
 	}
@@ -348,10 +354,13 @@ func isValidExt(filename string, exts []string) bool {
 }
 
 // anySubstringMatches returns true if any of the substrings are found in the path or content.
+// If no substrings are provided, it always returns true.
 func anySubstringMatches(substrings []string, path, content string) bool {
+	if len(substrings) == 0 {
+		return true
+	}
 	for _, sub := range substrings {
-		// Lowercase all strings for case-insensitive comparison
-		if strings.Contains(strings.ToLower(path), strings.ToLower(sub)) || strings.Contains(strings.ToLower(content), strings.ToLower(sub)) {
+		if strings.EqualFold(path, sub) || strings.Contains(content, sub) {
 			return true
 		}
 	}
@@ -444,16 +453,16 @@ func PreRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("directories are invalid: %s", strings.Join(invalidDirs, ", "))
 	}
 
-	// Validate the extensions
-	var invalidExts []string
-	for _, ext := range exts {
-		if !strings.HasPrefix(ext, ".") {
-			invalidExts = append(invalidExts, ext)
-		}
-	}
-	if len(invalidExts) > 0 {
-		return fmt.Errorf("extensions are invalid: %s", strings.Join(invalidExts, ", "))
-	}
+	//// // Validate the extensions
+	//// var invalidExts []string
+	//// for _, ext := range exts {
+	//// 	if !strings.HasPrefix(ext, ".") {
+	//// 		invalidExts = append(invalidExts, ext)
+	//// 	}
+	//// }
+	//// if len(invalidExts) > 0 {
+	//// 	return fmt.Errorf("extensions are invalid: %s", strings.Join(invalidExts, ", "))
+	//// }
 
 	// Validate the actions
 	var invalidActions []string
