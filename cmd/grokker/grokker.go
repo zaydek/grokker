@@ -1,11 +1,11 @@
-// Command-line tool to process files in specified directories.
+// grokker is a command-line tool to process files in specified directories for AI prompting.
 // It formats file paths and contents, optionally filters by substrings and extensions,
 // and performs specified actions (print, copy, or both) on the output generated
 // in the specified formats (tree, list, contents, or combinations).
 //
 // Usage:
 //
-//	gogrep [flags]
+//	grokker [flags]
 //
 // Flags:
 //
@@ -24,10 +24,10 @@
 //
 // Examples:
 //
-//	gogrep                                                                                              # Process all files in the current directory and print+copy the contents
-//	gogrep --substring=store --action=print --format=list                                               # Print the list of files with "store" in the path
-//	gogrep --dir=app --ext=.js --action=copy --format=contents                                          # Copy the contents of .js files in app/ to clipboard
-//	gogrep --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents  # Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"
+//	grokker                                                                                              # Process all files in the current directory and print+copy the contents
+//	grokker --substring=store --action=print --format=list                                               # Print the list of files with "store" in the path
+//	grokker --dir=app --ext=.js --action=copy --format=contents                                          # Copy the contents of .js files in app/ to clipboard
+//	grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents  # Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"
 package main
 
 import (
@@ -42,10 +42,10 @@ import (
 	"sort"
 	"strings"
 
-	"foo.bar/lib/logutils"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
+	"github.com/zaydek/grokker/lib/logutils"
 )
 
 // TreeNode represents a node in the directory tree, with a flag to distinguish directories from files.
@@ -239,28 +239,28 @@ func help() (string, error) {
 		return "", fmt.Errorf("failed to get current working directory: %w", err)
 	}
 	var b strings.Builder
-	b.WriteString(styleBoldGreen.Render(`gogrep`) + ` greps files in specified directories ` + styleFaint.Render(`(`+cwd+`)`) + "\n\n")
-	b.WriteString(styleBoldBrightWhite.Render(`Usage: gogrep [flags]`) + "\n\n")
-	b.WriteString(styleBoldBrightWhite.Render(`Flags:`) + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--dir`) + `        Directories to search (comma-separated, default [.])` + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--dir-depth`) + `  Maximum directory depth to search (default -1, meaning infinite)` + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--ext`) + `        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx` + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--substring`) + `  Substrings to filter by (comma-separated, default [])` + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--action`) + `     Actions to perform: print, copy (comma-separated, default print,copy)` + "\n")
-	b.WriteString(`  ` + styleCyan.Render(`--format`) + `     Output formats: tree, list, contents (comma-separated, default tree,contents)` + "\n\n")
-	b.WriteString(styleBoldBrightWhite.Render(`Examples:`) + "\n")
-	b.WriteString(`  ` + styleBlue.Render(`gogrep`) + `                                                                                              ` + styleFaint.Render(`Process all files in the current directory and print+copy the contents`) + "\n")
-	b.WriteString(`  ` + styleBlue.Render(`gogrep --substring=store --action=print --format=list`) + `                                               ` + styleFaint.Render(`Print the list of files with "store" in the path`) + "\n")
-	b.WriteString(`  ` + styleBlue.Render(`gogrep --dir=app --ext=.js --action=copy --format=contents`) + `                                          ` + styleFaint.Render(`Copy the contents of .js files in app/ to clipboard`) + "\n")
-	b.WriteString(`  ` + styleBlue.Render(`gogrep --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents`) + `  ` + styleFaint.Render(`Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"`))
+	b.WriteString(styleBoldGreen.Render("grokker") + " processes files in specified directories " + styleFaint.Render("("+cwd+")") + "\n\n")
+	b.WriteString(styleBoldBrightWhite.Render("Usage: grokker [flags]") + "\n\n")
+	b.WriteString(styleBoldBrightWhite.Render("Flags:") + "\n")
+	b.WriteString("  " + styleCyan.Render("--dir") + "        Directories to search (comma-separated, default [.])" + "\n")
+	b.WriteString("  " + styleCyan.Render("--dir-depth") + "  Maximum directory depth to search (default -1, meaning infinite)" + "\n")
+	b.WriteString("  " + styleCyan.Render("--ext") + "        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx" + "\n")
+	b.WriteString("  " + styleCyan.Render("--substring") + "  Substrings to filter by (comma-separated, default [])" + "\n")
+	b.WriteString("  " + styleCyan.Render("--action") + "     Actions to perform: print, copy (comma-separated, default print,copy)" + "\n")
+	b.WriteString("  " + styleCyan.Render("--format") + "     Output formats: tree, list, contents (comma-separated, default tree,contents)" + "\n\n")
+	b.WriteString(styleBoldBrightWhite.Render("Examples:") + "\n")
+	b.WriteString("  " + styleBlue.Render("grokker") + "                                                                                              " + styleFaint.Render("Process all files in the current directory and print+copy the contents") + "\n")
+	b.WriteString("  " + styleBlue.Render("grokker --substring=store --action=print --format=list") + "                                               " + styleFaint.Render(`Print the list of files with "store" in the path`) + "\n")
+	b.WriteString("  " + styleBlue.Render("grokker --dir=app --ext=.js --action=copy --format=contents") + "                                          " + styleFaint.Render("Copy the contents of .js files in app/ to clipboard") + "\n")
+	b.WriteString("  " + styleBlue.Render("grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents") + "  " + styleFaint.Render(`Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"`))
 	return b.String(), nil
 }
 
 // Root command definition
 var rootCmd = &cobra.Command{
-	Use:   "gogrep",
-	Short: "Process files in specified directories",
-	Long: `A command-line tool to process files in specified directories.
+	Use:   "grokker",
+	Short: "grokker: Process files for AI prompting",
+	Long: `grokker is a command-line tool designed to process files in specified directories for AI prompting.
 It formats file paths and contents, optionally filters by substrings and extensions,
 and performs specified actions on the output generated in the specified formats.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

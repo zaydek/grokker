@@ -1,4 +1,4 @@
-module foo.bar
+module github.com/zaydek/grokker
 
 go 1.23.6
 
