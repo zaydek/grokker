@@ -162,7 +162,7 @@ I have found that this approach, combined with some preamble about what I am att
 
 ## Usage
 
-To see the usage information, run any of the following commands:
+To see the usage information, run any one of the following commands:
 
 ```bash
 grokker
