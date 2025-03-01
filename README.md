@@ -160,6 +160,28 @@ I have found that this approach, combined with some preamble about what I am att
   grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents
   ```
 
+## Usage
+
+```bash
+grokker is a command-line tool for grokking files (https://github.com/zaydek/grokker)
+
+Usage: grokker [flags]
+
+Flags:
+  --dir        Directories to search (comma-separated, default [.])
+  --dir-depth  Maximum directory depth to search (default -1, meaning infinite)
+  --ext        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx
+  --substring  Substrings to filter by (comma-separated, default [])
+  --action     Actions to perform: print, copy (comma-separated, default print,copy)
+  --format     Output formats: tree, list, contents (comma-separated, default tree,contents)
+
+Examples:
+  grokker                                                                                              Process all files in the current directory and print+copy the contents
+  grokker --substring=store --action=print --format=list                                               Print the list of files with "store" in the path
+  grokker --dir=app --ext=.js --action=copy --format=contents                                          Copy the contents of .js files in app/ to clipboard
+  grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents  Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"
+```
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
