@@ -123,13 +123,16 @@ var (
 
 // Styles for the help message
 var (
-	styleBoldBrightWhite = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("15"))
-	styleBoldGreen       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10"))
-	styleBoldRed         = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
+	// Bold styles
+	StyleBoldWhite = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("15"))
+	StyleBoldGreen = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10"))
+	StyleBoldRed   = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
 
-	styleBlue  = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
-	styleCyan  = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-	styleFaint = lipgloss.NewStyle().Faint(true)
+	// Regular styles
+	StyleBlue           = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
+	StyleCyan           = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+	StyleFaint          = lipgloss.NewStyle().Faint(true)
+	StyleFaintUnderline = lipgloss.NewStyle().Faint(true).Underline(true)
 )
 
 var threeOrMoreNewlinesRegex = regexp.MustCompile(`\n{3,}`)
@@ -219,23 +222,23 @@ func copyToClipboard(str []byte) error {
 	return nil
 }
 
-// help returns the help message for the root command.
-func help() (string, error) {
+// generateHelpMessage generates the help message for the root command.
+func generateHelpMessage() (string, error) {
 	var b strings.Builder
-	b.WriteString(styleBoldGreen.Render("grokker") + " - A CLI Tool for Grokking Files " + styleFaint.Render("(https://github.com/zaydek/grokker)") + "\n\n")
-	b.WriteString(styleBoldBrightWhite.Render("Usage: grokker [flags]") + "\n\n")
-	b.WriteString(styleBoldBrightWhite.Render("Flags:") + "\n")
-	b.WriteString("  " + styleCyan.Render("--dir") + "        Directories to search (comma-separated, default [.])" + "\n")
-	b.WriteString("  " + styleCyan.Render("--dir-depth") + "  Maximum directory depth to search (default -1, meaning infinite)" + "\n")
-	b.WriteString("  " + styleCyan.Render("--ext") + "        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx" + "\n")
-	b.WriteString("  " + styleCyan.Render("--substring") + "  Substrings to filter by (comma-separated, default [])" + "\n")
-	b.WriteString("  " + styleCyan.Render("--action") + "     Actions to perform: print, copy (comma-separated, default print,copy)" + "\n")
-	b.WriteString("  " + styleCyan.Render("--format") + "     Output formats: tree, list, contents (comma-separated, default tree,contents)" + "\n\n")
-	b.WriteString(styleBoldBrightWhite.Render("Examples:") + "\n")
-	b.WriteString("  " + styleBlue.Render("grokker") + "                                                                                              " + styleFaint.Render("Process all files in the current directory and print+copy the contents") + "\n")
-	b.WriteString("  " + styleBlue.Render("grokker --substring=store --action=print --format=list") + "                                               " + styleFaint.Render(`Print the list of files with "store" in the path`) + "\n")
-	b.WriteString("  " + styleBlue.Render("grokker --dir=app --ext=.js --action=copy --format=contents") + "                                          " + styleFaint.Render("Copy the contents of .js files in app/ to clipboard") + "\n")
-	b.WriteString("  " + styleBlue.Render("grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents") + "  " + styleFaint.Render(`Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"`))
+	b.WriteString(StyleBoldGreen.Render("grokker") + " is a command-line tool for grokking files " + StyleFaint.Render("(") + StyleFaintUnderline.Render("https://github.com/zaydek/grokker") + StyleFaint.Render(")") + "\n\n")
+	b.WriteString(StyleBoldWhite.Render("Usage: grokker [flags]") + "\n\n")
+	b.WriteString(StyleBoldWhite.Render("Flags:") + "\n")
+	b.WriteString("  " + StyleCyan.Render("--dir") + "        Directories to search (comma-separated, default [.])" + "\n")
+	b.WriteString("  " + StyleCyan.Render("--dir-depth") + "  Maximum directory depth to search (default -1, meaning infinite)" + "\n")
+	b.WriteString("  " + StyleCyan.Render("--ext") + "        File extensions to include with leading dot (comma-separated, default []). Example: .ts, .tsx" + "\n")
+	b.WriteString("  " + StyleCyan.Render("--substring") + "  Substrings to filter by (comma-separated, default [])" + "\n")
+	b.WriteString("  " + StyleCyan.Render("--action") + "     Actions to perform: print, copy (comma-separated, default print,copy)" + "\n")
+	b.WriteString("  " + StyleCyan.Render("--format") + "     Output formats: tree, list, contents (comma-separated, default tree,contents)" + "\n\n")
+	b.WriteString(StyleBoldWhite.Render("Examples:") + "\n")
+	b.WriteString("  " + StyleBlue.Render("grokker") + "                                                                                              " + StyleFaint.Render("Process all files in the current directory and print+copy the contents") + "\n")
+	b.WriteString("  " + StyleBlue.Render("grokker --substring=store --action=print --format=list") + "                                               " + StyleFaint.Render(`Print the list of files with "store" in the path`) + "\n")
+	b.WriteString("  " + StyleBlue.Render("grokker --dir=app --ext=.js --action=copy --format=contents") + "                                          " + StyleFaint.Render("Copy the contents of .js files in app/ to clipboard") + "\n")
+	b.WriteString("  " + StyleBlue.Render("grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents") + "  " + StyleFaint.Render(`Print and copy the tree and contents of .ts/.tsx files with "bar" or "baz"`))
 	return b.String(), nil
 }
 
@@ -249,7 +252,7 @@ and performs specified actions on the output generated in the specified formats.
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Print the help message if no arguments are provided
 		if len(os.Args) == 1 {
-			help, _ := help()
+			help, _ := generateHelpMessage()
 			fmt.Println(help)
 			os.Exit(0)
 		}
@@ -314,7 +317,7 @@ and performs specified actions on the output generated in the specified formats.
 		}
 		if totalFiles > 50 {
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Println(styleBoldRed.Render(fmt.Sprintf("WARNING: Processing %s files. Proceed? [y/N] ", humanize.Comma(int64(totalFiles)))))
+			fmt.Println(StyleBoldRed.Render(fmt.Sprintf("WARNING: Processing %s files. Proceed? [y/N] ", humanize.Comma(int64(totalFiles)))))
 			response, _ := reader.ReadString('\n')
 			if !strings.EqualFold(strings.TrimSpace(response), "y") {
 				fmt.Println("Aborted.")
@@ -478,7 +481,7 @@ func main() {
 	rootCmd.Flags().StringSliceVar(&formats, "format", []string{"tree", "contents"}, "Output formats: tree, list, contents (comma-separated, default tree,contents)")
 	rootCmd.PreRunE = PreRunE
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		help, _ := help()
+		help, _ := generateHelpMessage()
 		fmt.Println(help)
 	})
 

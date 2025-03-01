@@ -1,8 +1,8 @@
 <!-- https://grok.com/chat/81e884f7-4ee3-4283-9a5d-f2e6c11bf9d0 -->
 
-# `grokker` - A CLI Tool for Grokking Files
+# `grokker` - A Command-Line Tool for Grokking Files
 
-`grokker` is a CLI tool intended to be used in conjunction with AI models like Grok 3 to make it easier to give eyes to the directory structure and files you are working with. It is akin to `grep` but offers a streamlined set of flags to make it easier to just get at the folders and files you are looking for.
+`grokker` is a command-line tool intended to be used in conjunction with AI models like Grok 3 to make it easier to give eyes to the directory structure and files you are working with. It is akin to `grep` but offers a streamlined set of flags to make it easier to just get at the folders and files you are looking for.
 
 Use `grokker` to save you time and energy wrestling with convoluted Unix commands like `find . -type f -name "*.js" | grep "store" | xargs -I {} bash -c 'echo "# {}"; cat {}'`.
 
