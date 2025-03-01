@@ -162,6 +162,22 @@ I have found that this approach, combined with some preamble about what I am att
 
 ## Usage
 
+To see the usage information, run any of the following commands:
+
+```bash
+grokker
+```
+
+```bash
+grokker -h
+```
+
+```bash
+grokker --help
+```
+
+The usage information will be displayed as follows:
+
 ```bash
 grokker is a command-line tool for grokking files (https://github.com/zaydek/grokker)
 
