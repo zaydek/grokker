@@ -68,9 +68,11 @@ go install github.com/zaydek/grokker@latest
 
 Once installed, you should be able to invoke `grokker` from anywhere even without calling `source` or other shell commands.
 
-## Flow with Grokker
+## How to use Grokker effectively
 
-I built `grokker` for myself to help with the following use case: You are working on a complicated code base and do not trust VS Code Copilot or Cursor with significant refactors. Instead, you want to use a frontier model such as Grok 3 that at the time of this writing is not available in the API (surely to change shortly). Use `grokker` to grep for the files you are looking for in a structured way. I have found this to be a very powerful way to use Grok 3 without wasting energy or effort. Finally, copy Grok's output as an input for VS Code's Copilot or Cursor OR simply ask Grok to give you the entire file for anything it has changed and paste files one at a time, depending on what you're interested in doing.
+I wrote `grokker` to help me with the following use case: **I am working in a complicated codebase and do not trust VS Code Copilot or Cursor to make significant changes**. Additionally, I want to use a frontier model like Grok 3 and its web interface. So, I use `grokker` to quickly grep for all semantically relevant files and folders, get the text buffer of their tree representation, copy their filenames and contents to the clipboard, and paste that as input to Grok 3.
+
+I have found that this approach, combined with some preamble about what I am attempting to do, has consistently given me extremely high-quality results. I also much prefer this workflow over `#` or `@` in VS Code and Cursor because it allows me to multitask. But the point overall is that it does not matter whether you want to use Grok 3, ChatGPT 4.5, or Claude 3.7—this tool helps you effectively sift for relevant context and does not bind you to any one model or interface.
 
 ### Flags
 
