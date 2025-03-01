@@ -176,11 +176,11 @@ grokker -h
 grokker --help
 ```
 
-**Here is a screenshot of the usage information:**
+Screenshots of the usage information:
 
 <img width="965" alt="Screenshot 2025-03-01 at 2 12 34 AM" src="https://github.com/user-attachments/assets/e4dc9e75-7a8e-4901-84c8-117f9d3f1c88" />
 
-**Here is the terminal output of the usage information:**
+Terminal output of the usage information:
 
 ```bash
 grokker is a command-line tool for grokking files (https://github.com/zaydek/grokker)
