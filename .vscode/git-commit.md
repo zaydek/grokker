@@ -1,11 +1,20 @@
-<!-- https://chatgpt.com/c/67bf59ad-b6d0-800d-b490-7bcc0d76f5e4 -->
+<!-- https://chatgpt.com/c/67c2df0d-bd14-800d-ac5e-b26d9884ad31 -->
 
-- Always prefix the title with **"👾 "**
-- Use a **title** for simple commits.
-- Use a **title** and **body** for complex commits.
-  - The length of the commit message should be **proportional to the scope of changes**:
-    - For **minor or few changes**, a **title** suffices.
-    - For **larger or more involved changes**, include a **body** and/or **enumeration**.
-  - In the **body**, use **non-wrapping text**, **enumeration**, or **both**:
-    - **Use non-wrapping text** for focused commits (related changes).
-    - **Use enumeration** for unfocused commits (unrelated changes), but **only if there is more than one item**.
+1. **Prefix Commits:**
+   Prefix commit messages with "🤖 ".
+
+2. **Commit Title:**
+   - Always use a title.
+   - Titles should **not** be delimited by a period.
+
+3. **Commit Body:**
+   - For simple commits, only use a title.
+   - For complex commits, use both a title and a body.
+   - If both a title and a body are used, separate them with `\n\n`.
+   - The body may contain:
+     - A **description** of the changes.
+     - **List items** to outline specific updates or steps.
+   - The length of the description and list items should be proportional to the scope of changes.
+
+4. **Text Formatting:**
+   - Always use **non-wrapping** text in commit messages.
