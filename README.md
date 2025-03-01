@@ -1,278 +1,137 @@
-<!-- https://grok.com/chat/81e884f7-4ee3-4283-9a5d-f2e6c11bf9d0 -->
+# `grokker` - A Command-Line Tool for Grokking Files
 
-# `grokker` - A Command-Line Tool for File Processing and AI Prompting
+`grokker` is a command-line tool intended to be used in conjunction with AI models like Grok 3 to make it easier to give eyes to the directory structure and files you’re working with. It’s akin to `grep` but offers a streamlined set of flags to just get at the folders and files you’re looking for.
 
-`grokker` is a versatile command-line tool designed to process files in specified directories, making it easier to generate structured inputs for AI models like Grok 3. It allows users to filter files based on extensions and substrings, and then output the results in various formats such as a directory tree, a list of file paths, or the contents of the files. The output can be printed to the console or copied to the clipboard, facilitating seamless integration into workflows involving AI prompting.
+Instead of wrestling with convoluted Unix commands that might not even work—like `find . -type f -name "*.js" | grep "store" | xargs -I {} bash -c 'echo "# {}"; cat {}'`—you can simply use `grokker`. Here’s how:
 
----
+- **Scan all files and folders in the current directory**:
+  ```bash
+  grokker
+  ```
+- **Scan all files and folders in the current directory up to one level deep**:
+  ```bash
+  grokker --dir-depth=1
+  ```
+- **Scan all files and folders in the current directory with file extensions `.ts`, `.tsx`**:
+  ```bash
+  grokker --ext=.ts,.tsx
+  ```
+- **Scan all files and folders in the current directory with file names or contents matching substrings `foo`, `bar`**:
+  ```bash
+  grokker --substring=foo,bar
+  ```
 
-## Why `grokker` Exists
+One of the neat features of `grokker` (not `grok`, oops!) is the `format` and `action` flags.
 
-`grokker` was created to simplify the process of preparing file-based inputs for AI prompting, particularly with tools like Grok 3. When working with AI models on tasks involving codebases or large sets of files, gathering and structuring the necessary data can be time-consuming and error-prone. `grokker` automates this process by providing a flexible way to filter files, visualize directory structures, and extract contents, all tailored to the needs of AI-driven workflows.
+- The `format` flag lets you pick how the output looks:
+  - `tree`: A directory tree of the files and folders.
+  - `list`: A plain list of file paths.
+  - `contents`: The actual contents of the files.
+  - Combine them if you want, like this:
+    ```bash
+    grokker --format=tree,contents
+    ```
+    That’ll show the tree *and* file contents.
 
----
+- The `action` flag decides what happens with the output:
+  - `print`: Prints it to the console.
+  - `copy`: Copies it to the clipboard. (**Note**: This uses `pbcopy`, so it’s macOS-only for now.)
+  - Use both together if you’re feeling fancy:
+    ```bash
+    grokker --action=print,copy
+    ```
 
-## Installation and Global Usage
+## Install Grokker
 
-`grokker` is designed to be a global CLI tool that can be invoked from any project directory. To install it, use the following command:
+**Note**: `grokker` is written in Go, so you’ll need Go installed. If you don’t have it, grab it from the [official website](https://golang.org/dl/).
 
-```bash
-go install github.com/yourusername/grokker@latest
-```
-
-Once installed, you can use `grokker` from any directory, including those with `~` (home directory) and `./` (current directory) paths. This makes it easy to integrate into your workflow, whether you're working on a single project or managing multiple repositories.
-
-### Example Use Case: Semantic Refactoring with Grok 3
-
-One powerful way to use `grokker` is for broad, semantically related refactoring tasks. For instance, if you need to refactor code related to concepts like "store" or "e-commerce," you can use `grokker` to pull out the relevant files and their directory structure as plaintext. Here's how:
-
-1. **Run `grokker` with Substring Filters**:
-   ```bash
-   grokker --substring=store,e-commerce --format=tree,contents --action=copy
-   ```
-   This command filters files containing "store" or "e-commerce" in their paths or contents, generates the directory tree and file contents, and copies the output to the clipboard.
-
-2. **Input to Grok 3**:
-   Paste the copied output into Grok 3 as part of your prompt. The structured data (tree and contents) provides Grok 3 with the context it needs to understand the project structure and make high-quality suggestions.
-
-3. **Receive and Apply Changes**:
-   Grok 3 can return refactored code or suggestions based on the input. You can then directly paste these changes back into your editor (e.g., VS Code or Cursor). For more targeted changes, ask Grok 3 to provide entire files for any modified content, allowing you to replace files one at a time.
-
-This workflow leverages `grokker` to streamline the process of gathering and structuring data for AI-driven refactoring, making it faster and more efficient to implement broad changes across your codebase.
-
----
-
-## Problems Solved by `grokker`
-
-- **File Selection and Filtering**: Quickly select files based on their extensions or substrings in their paths or contents.
-- **Directory Structure Visualization**: Generate a clear, hierarchical view of the directory tree to provide context for AI models or human users.
-- **Content Extraction**: Efficiently extract and format the contents of multiple files for use in prompts or other applications.
-- **Output Flexibility**: Choose whether to print the output to the console, copy it to the clipboard, or both, streamlining integration into various workflows.
-
----
-
-## Usage
-
-The basic syntax of `grokker` is:
+To install `grokker`, run:
 
 ```bash
-grokker [flags]
+go install github.com/zaydek/grokker
 ```
+
+Once it’s in, you can call `grokker` from anywhere—no need for `source` or other shell tricks. Check it with `grokker --help` to make sure it’s there.
+
+## Flow with Grokker
+
+I built `grokker` for myself to tackle this: You’re deep in a messy codebase and don’t trust VS Code Copilot or Cursor for big refactors. Instead, you want a heavy hitter like Grok 3, which (at the time of writing) isn’t available via API—though that’s bound to change soon. With `grokker`, you can quickly grab the files you need in a structured way. I’ve found this super powerful for feeding context to Grok 3 without burning time or energy. Then, take Grok’s output and paste it into Copilot or Cursor, or just ask Grok for the updated tree and files—it’s up to you.
 
 ### Flags
 
-- **`--dir strings`**
-  Specifies the directories to search. Multiple directories can be provided as a comma-separated list. Use `~` to represent the home directory.
-  - **Default**: `"."` (current directory)
+- **`--dir=[string,...string]`**
+  Tells `grokker` which directories to search. Throw in multiple ones with commas, like `--dir=path/to/dir1,path/to/dir2`.
+  - **Default**: `--dir=.` (current directory)
+  - **Note**: It handles shortcuts like `~` (home), `./` (here), and `../` (up one).
 
-- **`--dir-depth int`**
-  Sets the maximum directory depth to search. A value of `-1` means infinite depth.
-  - **Default**: `-1`
+- **`--dir-depth=int`**
+  Sets how deep `grokker` digs into subdirectories. Use `1` to stay shallow, or leave it at `-1` for everything. You probably won’t mess with this unless your folders are a rabbit hole.
+  - **Default**: `--dir-depth=-1` (unlimited depth)
 
-- **`--ext strings`**
-  Specifies the file extensions to include. Extensions must include the leading dot (e.g., `.ts`, `.tsx`). Multiple extensions can be provided as a comma-separated list. If not specified, all files are included.
-  - **Default**: `[]` (all files)
+- **`--ext=[string,...string]`**
+  Picks files by their extensions. Include the dot (e.g., `.ts`, `.tsx`). List multiple with commas, like `--ext=.ts,.tsx`.
+  - **Default**: `--ext=[]` (grabs all files, no filtering)
 
-- **`--substring strings`**
-  Specifies substrings to filter files by. Files are included if their paths or contents contain any of the specified substrings (case-insensitive for paths). Multiple substrings can be provided as a comma-separated list. If not specified, all files (after extension filtering) are included.
-  - **Default**: `[]` (all files)
+- **`--substring=[string,...string]`**
+  Filters files by substrings in their names *or* contents. Use commas for multiple, like `--substring=foo,bar,"hello world"`.
+  - **Default**: `[]` (no filtering, all files)
+  - **Note**: It’s case-sensitive.
+  - **Note**: If your substring has spaces or weird characters, quote it—e.g., `--substring="hello world"` or `--substring='foo.bar'`.
 
-- **`--action strings`**
-  Specifies the actions to perform on the output. Possible values are `print` (print to console) and `copy` (copy to clipboard). Multiple actions can be provided as a comma-separated list.
+- **`--action=[action,...action]`**
+  Decides what to do with the output. Mix and match with commas, like `--action=print,copy`.
+  - **Valid actions**:
+    - **`print`**: Dumps it to the console.
+    - **`copy`**: Copies it to the clipboard.
   - **Default**: `"print,copy"`
 
-- **`--format strings`**
-  Specifies the output formats to generate. Possible values are `tree` (directory tree), `list` (list of file paths), and `contents` (file contents). Multiple formats can be provided as a comma-separated list, and they will be concatenated in the output.
+- **`--format=[format,...format]`**
+  Controls how the output looks. Combine them with commas, like `--format=tree,contents`.
+  - **Valid formats**:
+    - **`tree`**: Shows a hierarchical tree—great for seeing the structure.
+    - **`list`**: Gives a flat list of paths, like `ls -1`.
+    - **`contents`**: Spits out the file contents.
   - **Default**: `"tree,contents"`
-
-### Notes
-
-- If no flags are provided, `grokker` processes all files in the current directory, generates the directory tree and file contents, and both prints and copies the output.
-- For large operations (more than 50 files), `grokker` prompts for confirmation to prevent accidental heavy processing.
-
----
+  - **Note**: The `tree` output isn’t exactly like the `tree` command. Compare:
+    - `tree` command:
+      ```
+      .
+      ├── app
+      │   └── store.js
+      └── lib
+          └── storeUtils.js
+      ```
+    - `grokker`:
+      ```
+      ./
+        app/
+          store.js
+        lib/
+          storeUtils.js
+      ```
 
 ## Examples
 
-Below are several examples that demonstrate how to use `grokker` in different scenarios, including the use of the `tree` format to showcase its utility.
-
-### 1. Basic Usage
-
-Running `grokker` without any flags processes all files in the current directory, generates the directory tree and file contents, and both prints and copies the output.
-
-```bash
-grokker
-```
-
-**Sample Output** (assuming a simple project structure):
-
-```
-./
-  main.go
-  utils.go
-
-# ./main.go
-package main
-import "fmt"
-func main() {
-    fmt.Println("Hello, world!")
-}
-
-# ./utils.go
-package main
-func util() string {
-    return "Utility function"
-}
-```
-
-### 2. Filtering by Substrings
-
-To print the list of files that contain the substring "store" in their paths:
-
-```bash
-grokker --substring=store --action=print --format=list
-```
-
-**Sample Output**:
-
-```
-app/store.js
-lib/storeUtils.js
-```
-
-### 3. Filtering by Extensions
-
-To copy the contents of all `.js` files in the `app` directory to the clipboard:
-
-```bash
-grokker --dir=app --ext=.js --action=copy --format=contents
-```
-
-**Sample Output** (copied to clipboard):
-
-```
-# app/store.js
-function createStore() {
-    return {};
-}
-```
-
-### 4. Combining Filters and Formats
-
-To print and copy the directory tree and contents of `.ts` and `.tsx` files in the `foo` and `bar` directories that contain "bar" or "baz" in their paths or contents:
-
-```bash
-grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents
-```
-
-**Sample Output** (printed and copied):
-
-```
-foo/
-  barComponent.tsx
-  bazHelper.ts
-bar/
-  barUtils.ts
-
-# foo/barComponent.tsx
-import React from 'react';
-export const BarComponent = () => <div>Bar</div>;
-
-# foo/bazHelper.ts
-export function baz() {
-    return "Baz";
-}
-
-# bar/barUtils.ts
-export function barUtil() {
-    return "Bar Utility";
-}
-```
-
-### 5. Visualizing Directory Structure with `tree`
-
-To visualize the directory structure of the current directory, including only `.md` files:
-
-```bash
-grokker --ext=.md --format=tree --action=print
-```
-
-**Sample Output**:
-
-```
-./
-  README.md
-  docs/
-    guide.md
-    reference.md
-```
-
-This example demonstrates how `grokker` can help users understand the structure of their project, which is particularly useful when preparing context for AI models.
-
-### 6. Using Multiple Directories and Depth Control
-
-To print the tree of `.go` files in the `src` and `pkg` directories, limiting the search to a depth of 1:
-
-```bash
-grokker --dir=src,pkg --ext=.go --dir-depth=1 --format=tree --action=print
-```
-
-**Sample Output**:
-
-```
-src/
-  main.go
-pkg/
-  utils.go
-```
-
----
-
-## Advanced Usage
-
-`grokker` supports more advanced scenarios to enhance its utility:
-
-- **Combining Multiple Formats**: Generate both the directory tree and the list of files for a quick overview.
-
+- **Process all files in the current directory and print+copy the contents**:
   ```bash
-  grokker --format=tree,list --action=print
+  grokker --dir=.
   ```
 
-  **Sample Output**:
-
-  ```
-  ./
-    app/
-      store.js
-    lib/
-      storeUtils.js
-
-  app/store.js
-  lib/storeUtils.js
-  ```
-
-- **Handling Large Numbers of Files**: When processing more than 50 files, `grokker` prompts for confirmation. For example:
-
+- **Print the list of files with "store" in the path**:
   ```bash
-  grokker --dir=large_project --ext=.py
+  grokker --substring=store --action=print --format=list
   ```
 
-  **Console Interaction**:
-
-  ```
-  WARNING: Processing 120 files. Proceed? [y/N]
-  ```
-
-- **Integration with Other Tools**: Pipe the output to other command-line tools for further processing.
-
+- **Copy the contents of `.js` files in `app/` to clipboard**:
   ```bash
-  grokker --format=list --action=print | grep "test"
+  grokker --dir=app --ext=.js --action=copy --format=contents
   ```
 
----
+- **Print and copy the tree and contents of `.ts`/`.tsx` files with "bar" or "baz"**:
+  ```bash
+  grokker --dir=foo,bar --substring=bar,baz --ext=.ts,.tsx --action=print,copy --format=tree,contents
+  ```
 
-## Conclusion
+## License
 
-`grokker` is a powerful and flexible tool that simplifies the process of gathering and formatting file data, especially for AI prompting with tools like Grok 3. Its ability to filter files by extensions and substrings, generate structured outputs like directory trees, and handle the results with customizable actions makes it an invaluable asset for developers and AI practitioners. Whether you're preparing data for code analysis, documentation generation, or debugging, `grokker` streamlines your workflow and enhances productivity.
-
-Try `grokker` in your next project and see how it can transform the way you work with files and AI!
+This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
