@@ -219,27 +219,27 @@ func copyToClipboard(str []byte) error {
 	return nil
 }
 
-// getTildePath returns the current working directory with the user's home directory replaced by a tilde.
-func getTildePath() (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("failed to get current working directory: %w", err)
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to get user's home directory: %w", err)
-	}
-	return strings.Replace(cwd, home, "~", 1), nil
-}
+//// // getTildePath returns the current working directory with the user's home directory replaced by a tilde.
+//// func getTildePath() (string, error) {
+//// 	cwd, err := os.Getwd()
+//// 	if err != nil {
+//// 		return "", fmt.Errorf("failed to get current working directory: %w", err)
+//// 	}
+//// 	home, err := os.UserHomeDir()
+//// 	if err != nil {
+//// 		return "", fmt.Errorf("failed to get user's home directory: %w", err)
+//// 	}
+//// 	return strings.Replace(cwd, home, "~", 1), nil
+//// }
 
 // help returns the help message for the root command.
 func help() (string, error) {
-	cwd, err := getTildePath()
-	if err != nil {
-		return "", fmt.Errorf("failed to get current working directory: %w", err)
-	}
+	//// cwd, err := getTildePath()
+	//// if err != nil {
+	//// 	return "", fmt.Errorf("failed to get current working directory: %w", err)
+	//// }
 	var b strings.Builder
-	b.WriteString(styleBoldGreen.Render("grokker") + " processes files in specified directories " + styleFaint.Render("("+cwd+")") + "\n\n")
+	b.WriteString(styleBoldGreen.Render("grokker") + " - A CLI Tool for Grokking Files " + styleFaint.Render("(https://github.com/zaydek/grokker)") + "\n\n")
 	b.WriteString(styleBoldBrightWhite.Render("Usage: grokker [flags]") + "\n\n")
 	b.WriteString(styleBoldBrightWhite.Render("Flags:") + "\n")
 	b.WriteString("  " + styleCyan.Render("--dir") + "        Directories to search (comma-separated, default [.])" + "\n")
